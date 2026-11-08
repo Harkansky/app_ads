@@ -1,0 +1,31 @@
+# Runs on every push and pull request: analyze and test. Linux only, so it
+# stays within the free GitHub Actions minutes.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Keep in step with `flutter:` in app_template/pubspec.yaml. This is
+          # a package, so its own pubspec keeps a version range instead.
+          flutter-version: 3.47.9
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
